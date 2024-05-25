@@ -2,21 +2,16 @@ import { useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
-import { getBalanceUSDC } from "../../utils/keplr";
+import { burnUSDC, convertUUSDCtoUSDC, getBalanceUSDC } from "../../utils/keplr";
 
 export default function Burn() {
-  // useState address
   const [address, setAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("");
   const chainId = "grand-1";
 
   useEffect(() => {
     (async () => {
-      const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
-      const accounts = await offlineSigner?.getAccounts();
-      if (accounts?.length > 0) {
-        setAddress(shortenString(accounts[0].address));
-      }
+      getAddressAndBalance();
     })();
   }, []);
 
@@ -26,12 +21,25 @@ export default function Burn() {
       setAddress("");
     } else {
       window?.keplr?.enable(chainId);
-      const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
-      const accounts = await offlineSigner?.getAccounts();
-      setAddress(shortenString(accounts[0].address));
-      const balance = await getBalanceUSDC(offlineSigner, accounts[0].address);
-      setBalance(balance)
+      getAddressAndBalance();
     }
+  }
+
+  async function getAddressAndBalance() {
+    const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
+    const accounts = await offlineSigner?.getAccounts();
+    if (accounts?.length > 0) {
+      const address = accounts[0].address;
+      setAddress(shortenString(address));
+      const balance = await getBalanceUSDC(offlineSigner, address);
+      setBalance(convertUUSDCtoUSDC(Number(balance)));
+    }
+  }
+
+  async function burn(event: any) {
+    event.preventDefault();
+    const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
+    await burnUSDC(offlineSigner, event.target[0].value, event.target[1].value);
   }
 
   return (
@@ -44,7 +52,7 @@ export default function Burn() {
               1. Burn USDC on Noble
             </div>
           </div>
-          <form className="space-y-6" action="#" method="POST">
+          <form className="space-y-6" onSubmit={burn}>
             <div>
               <label
                 htmlFor="number"
@@ -57,6 +65,7 @@ export default function Burn() {
                   id="number"
                   name="number"
                   type="number"
+                  step="0.01"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                 />

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
+import { getBalanceUSDC } from "../../utils/keplr";
 
 export default function Burn() {
   // useState address
   const [address, setAddress] = useState<string>("");
+  const [balance, setBalance] = useState<string>("");
   const chainId = "grand-1";
 
   useEffect(() => {
@@ -27,13 +29,15 @@ export default function Burn() {
       const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
       const accounts = await offlineSigner?.getAccounts();
       setAddress(shortenString(accounts[0].address));
+      const balance = await getBalanceUSDC(offlineSigner, accounts[0].address);
+      setBalance(balance)
     }
   }
 
   return (
     <>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <Info currency={Currency.USDC} value={""} address={address} />
+        <Info currency={Currency.USDC} value={balance} address={address} />
         <div className="action">
           <div className="align-center">
             <div className="font-bold text-gray-90 mb-4">

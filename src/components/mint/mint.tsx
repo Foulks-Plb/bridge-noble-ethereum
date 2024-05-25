@@ -1,10 +1,45 @@
+import { useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
+import { ethers } from "ethers";
+import { shortenString } from "../../utils/utils";
+import ButtonAction from "../button-action/button-action";
 
 export default function Mint() {
+  const [address, setAddress] = useState<string>("");
+  const [balance, setBalance] = useState<string>("");
+
+  useEffect(() => {
+    (async () => {
+      getMetamaskAccount();
+    })();
+  }, []);
+
+  async function toggleMetamask() {
+    if (!address) {
+      getMetamaskAccount();
+    } else {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      provider.destroy();
+      setAddress("");
+    }
+  }
+
+  async function getMetamaskAccount() {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const _walletAddress = await signer.getAddress();
+    await provider.send("wallet_switchEthereumChain", [{ chainId: "0xaa36a7" }]);
+    setAddress(shortenString(_walletAddress));
+
+    const balance = await provider.getBalance(_walletAddress)
+    const convertedBalance = ethers.formatEther(balance);
+    setBalance(convertedBalance);
+  }
+
   return (
     <>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <Info  currency={Currency.ETH} value={1} address="0x000"/>
+        <Info currency={Currency.ETH} value={balance} address={address} />
         <div className="action">
           <div className="align-center">
             <div className="font-bold text-gray-90 mb-4">
@@ -42,15 +77,16 @@ export default function Mint() {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="mt-28 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Mint
-              </button>
+              <ButtonAction active={!!address} title="Mint" />
             </div>
           </form>
         </div>
+        <button
+          className="mt-2 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          onClick={toggleMetamask}
+        >
+          {address ? "Disconnect Metamask" : "Connect Metamask"}
+        </button>
       </div>
     </>
   );

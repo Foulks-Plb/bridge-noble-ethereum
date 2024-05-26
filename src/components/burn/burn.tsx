@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
@@ -29,7 +29,7 @@ export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}
   async function getAddressAndBalance() {
     const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
     const accounts = await offlineSigner?.getAccounts();
-    if (accounts?.length > 0) {
+    if (accounts && accounts?.length > 0) {
       const address = accounts[0].address;
       setAddress(shortenString(address));
       const balance = await getBalanceUSDC(offlineSigner, address);
@@ -37,7 +37,7 @@ export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}
     }
   }
 
-  async function burn(event: any) {
+  async function burn(event: FormEvent) {
     event.preventDefault();
     const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
     const txBurn = await burnUSDC(offlineSigner, event.target[0].value, event.target[1].value);

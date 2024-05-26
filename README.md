@@ -1,4 +1,7 @@
 # BRIDGE: NOBLE => ETHEREUM
+
+![App screenshot](./src/assets/screen1.png)
+
 This project is a simple React application styled with Tailwind CSS that serves as a bridge to transfer USDC from Noble to Ethereum. 
 The app allows users to burn USDC on the Noble test chain and mint the corresponding amount on Ethereum Sepolia.
 
@@ -25,10 +28,10 @@ It's important to note that this process could be automated using a relayer prov
 Circle offers a relayer function that automatically transfers the burn message to the minting step without manual intervention (second step).
 
 ## Resources
-[CCTP Documentation](https://developers.circle.com/stablecoins/docs/evm-smart-contracts#messagetransmitter): Circle's CCTP Documentation
-[Smart contract message transmitter](https://sepolia.etherscan.io/address/0x7865fafc2db2093669d92c0f33aeef291086befd#code): Deployed Smart Contract on Ethereum Sepolia
-[Attestation API](https://developers.circle.com/stablecoins/reference/getattestation): Circle's Attestation API
-[CosmoJS](https://docs.keplr.app/api/cosmjs.html): Keplr Wallet integration
+- [CCTP Documentation](https://developers.circle.com/stablecoins/docs/evm-smart-contracts#messagetransmitter): Circle's CCTP Documentation
+- [Smart contract message transmitter](https://sepolia.etherscan.io/address/0x7865fafc2db2093669d92c0f33aeef291086befd#code): Deployed Smart Contract on Ethereum Sepolia
+- [Attestation API](https://developers.circle.com/stablecoins/reference/getattestation): Circle's Attestation API
+- [CosmoJS](https://docs.keplr.app/api/cosmjs.html): Keplr Wallet integration
 
 
 # React + TypeScript + Vite

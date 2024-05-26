@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
-import { ethers } from "ethers";
+import { BrowserProvider, JsonRpcSigner, formatEther } from "ethers";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
 import { getAttestation } from "../../utils/noble";
@@ -14,9 +14,11 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
 
   const [txHashBurn, setTxHashBurn] = useState<string>("");
   const [attestation, setAttestation] = useState<string>("");
-  const [message, setMessage] = useState();
+  const [message, setMessage] = useState<Buffer>();
 
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  const [signer, setSigner] = useState<JsonRpcSigner>();
 
   useEffect(() => {
     (async () => {
@@ -47,30 +49,30 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
     if (!address) {
       getMetamaskAccount();
     } else {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      provider.destroy();
+      signer?.provider.destroy();
       setAddress("");
     }
   }
 
   async function getMetamaskAccount() {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const _walletAddress = await signer.getAddress();
+    const provider = new BrowserProvider(window.ethereum);
+    const _signer = await provider.getSigner();
+    setSigner(_signer);
+
+    const _walletAddress = await _signer.getAddress();
     await provider.send("wallet_switchEthereumChain", [
       { chainId: "0xaa36a7" },
     ]);
     setAddress(shortenString(_walletAddress));
 
     const balance = await provider.getBalance(_walletAddress);
-    const convertedBalance = ethers.formatEther(balance);
+    const convertedBalance = formatEther(balance);
     setBalance(convertedBalance);
   }
 
-  async function mint(event: any) {
+  async function mint(event: FormEvent) {
     event.preventDefault();
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    await mintReceiveMessage(message, attestation, await provider.getSigner());
+    await mintReceiveMessage(message, attestation, signer);
   }
 
   return (

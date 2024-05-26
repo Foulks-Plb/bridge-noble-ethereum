@@ -3,16 +3,44 @@ import Info, { Currency } from "../info/info";
 import { ethers } from "ethers";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
+import { getAttestation } from "../../utils/keplr";
+import { ITxBurn } from "../../utils/types";
+import SpinLoading from "../spin-loading/spin-loading";
 
-export default function Mint() {
+export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
   const [address, setAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("");
+
+  const [txHashBurn, setTxHashBurn] = useState<string>("");
+  const [attestation, setAttestation] = useState<string>("");
+  const [message, setMessageHash] = useState<string>("");
+
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
       getMetamaskAccount();
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (txBurn) {
+        setAttestation("");
+        setIsSearching(true);
+        setTxHashBurn(txBurn.hash);
+        setMessageHash(txBurn.messageHash);
+
+        try {
+          const attestationSearch = await getAttestation(txBurn.messageHash);
+          setAttestation(attestationSearch.attestation);
+        } catch (error) {
+          console.error(error);
+        }
+        setIsSearching(false);
+      }
+    })();
+  }, [txBurn]);
 
   async function toggleMetamask() {
     if (!address) {
@@ -28,10 +56,12 @@ export default function Mint() {
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const _walletAddress = await signer.getAddress();
-    await provider.send("wallet_switchEthereumChain", [{ chainId: "0xaa36a7" }]);
+    await provider.send("wallet_switchEthereumChain", [
+      { chainId: "0xaa36a7" },
+    ]);
     setAddress(shortenString(_walletAddress));
 
-    const balance = await provider.getBalance(_walletAddress)
+    const balance = await provider.getBalance(_walletAddress);
     const convertedBalance = ethers.formatEther(balance);
     setBalance(convertedBalance);
   }
@@ -53,6 +83,8 @@ export default function Mint() {
               </label>
               <div className="mt-2">
                 <input
+                  value={txHashBurn}
+                  onChange={(e) => setTxHashBurn(e.target.value)}
                   type="text"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
@@ -67,8 +99,12 @@ export default function Mint() {
               >
                 Attestation hash - status
               </label>
-              <div className="mt-2">
+
+              <div className="mt-2 flex items-center">
+                {isSearching && <SpinLoading />}
                 <input
+                  value={attestation}
+                  onChange={(e) => setTxHashBurn(e.target.value)}
                   type="text"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"

@@ -3,6 +3,8 @@ import { SigningStargateClient } from "@cosmjs/stargate";
 import type { Window as KeplrWindow } from "@keplr-wallet/types";
 import { MsgDepositForBurn } from "./tx";
 import { addressToBytes } from "./utils";
+import { ethers } from "ethers";
+import { ITxBurn } from "./types";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -33,13 +35,17 @@ function createDefaultRegistry(): Registry {
   return new Registry(cctpTypes);
 }
 
-export async function burnUSDC(wallet: OfflineSigner, amount: number, addressRecipient: string) {
+export async function burnUSDC(
+  wallet: OfflineSigner,
+  amount: number,
+  addressRecipient: string
+): Promise<ITxBurn> {
   const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {
     registry: createDefaultRegistry(),
   });
   const [account] = await wallet.getAccounts();
 
-  const mintRecipientBytes = addressToBytes(addressRecipient)
+  const mintRecipientBytes = addressToBytes(addressRecipient);
 
   const msg = {
     typeUrl: "/circle.cctp.v1.MsgDepositForBurn",
@@ -69,9 +75,40 @@ export async function burnUSDC(wallet: OfflineSigner, amount: number, addressRec
     memo
   );
 
-  console.log(
-    `Burned on Noble: https://mintscan.io/noble-testnet/tx/${result.transactionHash}`
-  );
+  let message = result.events[19].attributes[0].value;
+  message = message.replace(/"/g, "");
+  const decodedData = Buffer.from(message, "base64");
+  const hash = ethers.keccak256(decodedData);
+
+  return {
+    hash: result.transactionHash,
+    message: message,
+    messageHash: hash,
+  };
+}
+
+export async function getAttestation(hash: string) {
+  const start = Date.now();
+
+  let attestationResponse: { status: string; attestation: string } = {
+    status: "pending",
+    attestation: "",
+  };
+  while (attestationResponse?.status !== "complete") {
+    const response = await fetch(
+      `https://iris-api-sandbox.circle.com/v1/attestations/${hash}`
+    );
+    attestationResponse = await response.json();
+
+    const now = Date.now();
+    if (now - start > 5 * 60 * 1000) {
+      throw new Error("Timeout");
+    }
+    
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+
+  return attestationResponse;
 }
 
 export function convertUSDCtoUUSDC(amount: number): string {
@@ -79,5 +116,5 @@ export function convertUSDCtoUUSDC(amount: number): string {
 }
 
 export function convertUUSDCtoUSDC(amount: number): string {
-  return ((amount / 1000000).toFixed(2)).toString();
+  return (amount / 1000000).toFixed(2).toString();
 }

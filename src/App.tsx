@@ -1,8 +1,12 @@
+import { useState } from "react";
 import "./App.css";
 import Burn from "./components/burn/burn";
 import Mint from "./components/mint/mint";
+import { ITxBurn } from "./utils/types";
 
 function App() {
+  const [txBurn, setTxBurn] = useState<ITxBurn>();
+
   return (
     <>
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 ">
@@ -10,8 +14,8 @@ function App() {
           Bridge USDC from Noble to Ethereum
         </h2>
         <div className="flex mt-10">
-          <Burn />
-          <Mint />
+          <Burn txBurnDone={setTxBurn}/>
+          <Mint txBurn={txBurn}/>
         </div>
       </div>
     </>

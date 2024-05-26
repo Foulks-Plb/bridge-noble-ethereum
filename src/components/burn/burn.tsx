@@ -3,8 +3,9 @@ import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
 import { burnUSDC, convertUUSDCtoUSDC, getBalanceUSDC } from "../../utils/keplr";
+import { ITxBurn } from "../../utils/types";
 
-export default function Burn() {
+export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}) {
   const [address, setAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("");
   const chainId = "grand-1";
@@ -39,7 +40,8 @@ export default function Burn() {
   async function burn(event: any) {
     event.preventDefault();
     const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
-    await burnUSDC(offlineSigner, event.target[0].value, event.target[1].value);
+    const txBurn = await burnUSDC(offlineSigner, event.target[0].value, event.target[1].value);
+    txBurnDone(txBurn);
   }
 
   return (

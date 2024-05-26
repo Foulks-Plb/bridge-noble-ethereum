@@ -14,7 +14,7 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
 
   const [txHashBurn, setTxHashBurn] = useState<string>("");
   const [attestation, setAttestation] = useState<string>("");
-  const [message, setMessageHash] = useState<string>("");
+  const [message, setMessage] = useState();
 
   const [isSearching, setIsSearching] = useState<boolean>(false);
 
@@ -30,7 +30,7 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
         setAttestation("");
         setIsSearching(true);
         setTxHashBurn(txBurn.hash);
-        setMessageHash(txBurn.messageHash);
+        setMessage(txBurn.message);
 
         try {
           const attestationSearch = await getAttestation(txBurn.messageHash);

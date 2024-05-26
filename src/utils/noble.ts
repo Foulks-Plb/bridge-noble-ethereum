@@ -81,12 +81,12 @@ export async function burnUSDC(
 
   let message = result.events[19].attributes[0].value;
   message = message.replace(/"/g, "");
-  const decodedData = Buffer.from(message, "base64");
-  const hash = ethers.keccak256(decodedData);
+  const decodedMessage = Buffer.from(message, "base64");
+  const hash = ethers.keccak256(decodedMessage);
 
   return {
     hash: result.transactionHash,
-    message: message,
+    message: decodedMessage,
     messageHash: hash,
   };
 }

@@ -1,5 +1,5 @@
 export interface ITxBurn {
     hash: string;
-    message: string;
+    message: Buffer;
     messageHash: string;
 }

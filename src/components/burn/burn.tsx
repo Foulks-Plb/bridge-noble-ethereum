@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
-import { burnUSDC, convertUUSDCtoUSDC, getBalanceUSDC } from "../../utils/keplr";
+import { burnUSDC, convertUUSDCtoUSDC, getBalanceUSDC } from "../../utils/noble";
 import { ITxBurn } from "../../utils/types";
 
 export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}) {

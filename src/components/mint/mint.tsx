@@ -3,9 +3,10 @@ import Info, { Currency } from "../info/info";
 import { ethers } from "ethers";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
-import { getAttestation } from "../../utils/keplr";
+import { getAttestation } from "../../utils/noble";
 import { ITxBurn } from "../../utils/types";
 import SpinLoading from "../spin-loading/spin-loading";
+import { mintReceiveMessage } from "../../utils/ethereum";
 
 export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
   const [address, setAddress] = useState<string>("");
@@ -66,6 +67,12 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
     setBalance(convertedBalance);
   }
 
+  async function mint(event: any) {
+    event.preventDefault();
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    await mintReceiveMessage(message, attestation, await provider.getSigner());
+  }
+
   return (
     <>
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -76,7 +83,7 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
               2. Mint USDC on Ethereum
             </div>
           </div>
-          <form className="space-y-6" action="#" method="POST">
+          <form className="space-y-6" onSubmit={mint}>
             <div>
               <label className="block text-sm font-medium text-gray-900">
                 Burn tx hash

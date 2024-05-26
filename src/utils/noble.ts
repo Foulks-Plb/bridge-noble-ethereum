@@ -1,7 +1,7 @@
 import { GeneratedType, OfflineSigner, Registry } from "@cosmjs/proto-signing";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import type { Window as KeplrWindow } from "@keplr-wallet/types";
-import { MsgDepositForBurn } from "./tx";
+import { MsgDepositForBurn, MsgDepositForBurnWithCaller } from "./tx";
 import { addressToBytes } from "./utils";
 import { ethers } from "ethers";
 import { ITxBurn } from "./types";
@@ -29,6 +29,7 @@ export async function getBalanceUSDC(
 
 const cctpTypes: ReadonlyArray<[string, GeneratedType]> = [
   ["/circle.cctp.v1.MsgDepositForBurn", MsgDepositForBurn],
+  ["/circle.cctp.v1.MsgDepositForBurnWithCaller", MsgDepositForBurnWithCaller],
 ];
 
 function createDefaultRegistry(): Registry {
@@ -48,13 +49,14 @@ export async function burnUSDC(
   const mintRecipientBytes = addressToBytes(addressRecipient);
 
   const msg = {
-    typeUrl: "/circle.cctp.v1.MsgDepositForBurn",
+    typeUrl: "/circle.cctp.v1.MsgDepositForBurnWithCaller",
     value: {
       from: account.address,
       amount: convertUSDCtoUUSDC(amount),
       destinationDomain: 0,
       mintRecipient: mintRecipientBytes,
       burnToken: "uusdc",
+      destinationCaller: mintRecipientBytes,
     },
   };
 
@@ -74,6 +76,8 @@ export async function burnUSDC(
     fee,
     memo
   );
+
+  console.log(result);
 
   let message = result.events[19].attributes[0].value;
   message = message.replace(/"/g, "");

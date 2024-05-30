@@ -72,7 +72,9 @@ export default function Mint({ txBurn }: { txBurn: ITxBurn | undefined }) {
 
   async function mint(event: FormEvent) {
     event.preventDefault();
-    await mintReceiveMessage(message, attestation, signer);
+    if (message && signer) {
+      await mintReceiveMessage(message, attestation, signer);
+    }
   }
 
   return (

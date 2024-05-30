@@ -2,13 +2,30 @@ import { FormEvent, useEffect, useState } from "react";
 import Info, { Currency } from "../info/info";
 import { shortenString } from "../../utils/utils";
 import ButtonAction from "../button-action/button-action";
-import { burnUSDC, convertUUSDCtoUSDC, getBalanceUSDC } from "../../utils/noble";
+import {
+  burnUSDC,
+  convertUUSDCtoUSDC,
+  getBalanceUSDC,
+} from "../../utils/noble";
 import { ITxBurn } from "../../utils/types";
 
-export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}) {
+export default function Burn({
+  txBurnDone,
+}: {
+  txBurnDone: (data: ITxBurn) => void;
+}) {
   const [address, setAddress] = useState<string>("");
   const [balance, setBalance] = useState<string>("");
   const chainId = "grand-1";
+
+  const [formValues, setFormValues] = useState({ amount: 0, recipient: '' });
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormValues({
+      ...formValues,
+      [event.target.name]: event.target.value,
+    });
+  };
 
   useEffect(() => {
     (async () => {
@@ -40,8 +57,14 @@ export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}
   async function burn(event: FormEvent) {
     event.preventDefault();
     const offlineSigner = window?.keplr?.getOfflineSigner(chainId);
-    const txBurn = await burnUSDC(offlineSigner, event.target[0].value, event.target[1].value);
-    txBurnDone(txBurn);
+    if (offlineSigner) {
+      const txBurn = await burnUSDC(
+        offlineSigner,
+        formValues.amount,
+        formValues.recipient
+      );
+      txBurnDone(txBurn);
+    }
   }
 
   return (
@@ -65,10 +88,11 @@ export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}
               <div className="mt-2">
                 <input
                   id="number"
-                  name="number"
+                  name="amount"
                   type="number"
                   step="0.01"
                   required
+                  onChange={handleChange}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                 />
               </div>
@@ -81,7 +105,9 @@ export default function Burn({txBurnDone}: {txBurnDone: (data: ITxBurn) => void}
               <div className="mt-2">
                 <input
                   type="text"
+                  name="recipient"
                   required
+                  onChange={handleChange}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm"
                 />
               </div>

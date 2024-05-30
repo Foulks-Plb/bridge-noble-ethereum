@@ -8,7 +8,10 @@ import { ITxBurn } from "./types";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
-  interface Window extends KeplrWindow {}
+  interface Window extends KeplrWindow {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    ethereum?: any;
+  }
 }
 
 const RPC = "https://rpc.testnet.noble.strange.love";
@@ -44,51 +47,55 @@ export async function burnUSDC(
   const client = await SigningStargateClient.connectWithSigner(RPC, wallet, {
     registry: createDefaultRegistry(),
   });
-  const [account] = await wallet.getAccounts();
+  try {
+    const [account] = await wallet.getAccounts();
 
-  const mintRecipientBytes = addressToBytes(addressRecipient);
+    const mintRecipientBytes = addressToBytes(addressRecipient);
 
-  const msg = {
-    typeUrl: "/circle.cctp.v1.MsgDepositForBurnWithCaller",
-    value: {
-      from: account.address,
-      amount: convertUSDCtoUUSDC(amount),
-      destinationDomain: 0,
-      mintRecipient: mintRecipientBytes,
-      burnToken: "uusdc",
-      destinationCaller: mintRecipientBytes,
-    },
-  };
-
-  const fee = {
-    amount: [
-      {
-        denom: "uusdc",
-        amount: "0",
+    const msg = {
+      typeUrl: "/circle.cctp.v1.MsgDepositForBurnWithCaller",
+      value: {
+        from: account.address,
+        amount: convertUSDCtoUUSDC(amount),
+        destinationDomain: 0,
+        mintRecipient: mintRecipientBytes,
+        burnToken: "uusdc",
+        destinationCaller: mintRecipientBytes,
       },
-    ],
-    gas: "200000",
-  };
-  const memo = "";
-  const result = await client.signAndBroadcast(
-    account.address,
-    [msg],
-    fee,
-    memo
-  );
+    };
 
-  console.log(result);
+    const fee = {
+      amount: [
+        {
+          denom: "uusdc",
+          amount: "0",
+        },
+      ],
+      gas: "200000",
+    };
+    const memo = "";
+    const result = await client.signAndBroadcast(
+      account.address,
+      [msg],
+      fee,
+      memo
+    );
 
-  let message = result.events[19].attributes[0].value;
-  message = message.replace(/"/g, "");
-  const decodedMessage = Buffer.from(message, "base64");
-  const hash = ethers.keccak256(decodedMessage);
+    let message = result.events[19].attributes[0].value;
+    message = message.replace(/"/g, "");
+    const decodedMessage = Buffer.from(message, "base64");
+    const hash = ethers.keccak256(decodedMessage);
 
-  return {
-    hash: result.transactionHash,
-    message: decodedMessage,
-    messageHash: hash,
-  };
+    return {
+      hash: result.transactionHash,
+      message: decodedMessage,
+      messageHash: hash,
+    };
+    
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }
 
 export async function getAttestation(hash: string) {
@@ -108,7 +115,7 @@ export async function getAttestation(hash: string) {
     if (now - start > 5 * 60 * 1000) {
       throw new Error("Timeout");
     }
-    
+
     await new Promise((r) => setTimeout(r, 3000));
   }
 
